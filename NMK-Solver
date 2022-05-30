@@ -1,0 +1,397 @@
+#include <iostream>
+#include <stdio.h>
+#define DONT_PRINT_ALL false
+#define PRINT_ALL true
+#define BOTH_PLAYERS '3'
+#define P_ONE_WIN 1
+#define P_TWO_WIN 2
+#define DRAW 3
+#define NOT_SOLVED 0
+using namespace std;
+int o;
+
+
+struct myVector
+{
+    char*** array;
+    int capacity;
+    int current;
+};
+
+struct inputData
+{
+    int sizeX;
+    int sizeY;
+    char player;
+    int winCondition;
+    char** board;
+    int mode;
+};
+
+void copyBoard(char** newBoard, char** OGboard, inputData data);
+char** createBoard(inputData data);
+void printBoards(myVector v, inputData data);
+bool makePossibleMove(myVector& v, char** board, inputData data, int mode);
+int checkIfGameAlreadyOver(char** board, inputData data, char player);
+int solveGame(char** board, inputData data);
+
+
+void vectorInit(myVector& v, inputData& data)
+{
+    v.array = new char** [1];
+    v.array[0] = createBoard(data);
+    v.capacity = 1;
+    v.current = 0;
+}
+
+void push(myVector& v, char** board, inputData data)
+{
+    if (v.current == v.capacity)
+    {
+        char*** temp = new char** [2 * v.capacity];
+        for (int i = 0; i < 2 * v.capacity; i++)
+        {
+            temp[i] = createBoard(data);
+        }
+        for (int i = 0; i < v.capacity; i++)
+        {
+            copyBoard(temp[i], v.array[i], data);
+        }
+        for (int i = 0; i < v.capacity; i++)
+        {
+            for (int l = 0; l < data.sizeY; l++)
+            {
+                delete[] v.array[i][l];
+            }
+            delete[] v.array[i];
+        }
+        delete[] v.array;
+        v.array = temp;
+        v.capacity = v.capacity * 2;
+    }
+    copyBoard(v.array[v.current], board, data);
+    v.current++;
+}
+
+int compareText(char* text1, char* text2, int compareSize)
+{
+    int counter = 0;
+    for (int i = 0; i < compareSize; i++)
+    {
+        if (text1[i] == text2[i])
+        {
+            counter++;
+        }
+    }
+    if (counter == compareSize) return 1;
+    else return 0;
+}
+
+char** createBoard(inputData data)
+{
+    char** board;
+    board = new char* [data.sizeY];
+    for (int y = 0; y < data.sizeY; y++)
+    {
+        board[y] = new char[data.sizeX];
+    }
+    return board;
+}
+
+void fillBoard(inputData& data)
+{
+    for (int y = 0; y < data.sizeY; y++)
+    {
+        for (int x = 0; x < data.sizeX; x++)
+        {
+            scanf(" %c", &data.board[y][x]);
+        }
+    }
+}
+
+void copyBoard(char** newBoard, char** OGboard, inputData data)
+{
+    for (int i = 0; i < data.sizeY; i++)
+        for (int l = 0; l < data.sizeX; l++)
+            newBoard[i][l] = OGboard[i][l];
+}
+
+void printBoards(myVector v, inputData data)
+{
+    printf("%d \n", v.current);
+
+    for (int i = 0; i < v.current; i++)
+    {
+        for (int y = 0; y < data.sizeY; y++)
+        {
+            for (int x = 0; x < data.sizeX; x++)
+            {
+                printf("%c ", v.array[i][y][x]);
+            }
+            printf("\n");
+        }
+    }
+}
+
+void printWinningBoard(char** board, inputData data)
+{
+    printf("1\n");
+
+    for (int y = 0; y < data.sizeY; y++)
+    {
+        for (int x = 0; x < data.sizeX; x++)
+        {
+            printf("%c ", board[y][x]);
+        }
+        printf("\n");
+    }
+}
+
+void dealocateMemoryVector(myVector& v, inputData& data)
+{
+    for (int i = 0; i < v.capacity; i++)
+    {
+        for (int l = 0; l < data.sizeY; l++)
+        {
+            delete[] v.array[i][l];
+        }
+        delete[] v.array[i];
+    }
+    delete[] v.array;
+}
+
+void dealocateMemoryBaseBoard(inputData& data)
+{
+    for (int i = 0; i < data.sizeY; i++)
+    {
+        delete[] data.board[i];
+    }
+    delete[] data.board;
+}
+
+void modeOne()
+{
+    inputData data;
+    data.mode = 1;
+    scanf("%d", &data.sizeY);
+    scanf("%d", &data.sizeX);
+    scanf("%d", &data.winCondition);
+    scanf(" %c", &data.player);
+    data.board = createBoard(data);
+    fillBoard(data);
+    myVector v;
+    vectorInit(v, data);
+    makePossibleMove(v, data.board, data, 1);
+    printBoards(v, data);
+    dealocateMemoryVector(v, data);
+    dealocateMemoryBaseBoard(data);
+}
+
+void modeTwo()
+{
+    bool print;
+    inputData data;
+    data.mode = 2;
+    scanf("%d", &data.sizeY);
+    scanf("%d", &data.sizeX);
+    scanf("%d", &data.winCondition);
+    scanf(" %c", &data.player);
+    data.board = createBoard(data);
+    fillBoard(data);
+    myVector v;
+    vectorInit(v, data);
+    print = makePossibleMove(v, data.board, data, 2);
+    if (print == PRINT_ALL) printBoards(v, data);
+    dealocateMemoryVector(v, data);
+    dealocateMemoryBaseBoard(data);
+}
+
+void modeThree()
+{
+    int output;
+    inputData data;
+    data.mode = 3;
+    scanf("%d", &data.sizeY);
+    scanf("%d", &data.sizeX);
+    scanf("%d", &data.winCondition);
+    scanf(" %c", &data.player);
+    data.board = createBoard(data);
+    fillBoard(data);
+    if (data.player == '2') data.player = '1';
+    else if (data.player == '1') data.player = '2';
+    output = checkIfGameAlreadyOver(data.board, data, BOTH_PLAYERS);
+    if(output == NOT_SOLVED) output = solveGame(data.board, data);
+    if (output == P_ONE_WIN) cout << "FIRST_PLAYER_WINS" << endl;
+    else if (output == P_TWO_WIN) cout << "SECOND_PLAYER_WINS" << endl;
+    else if (output == DRAW) cout << "BOTH_PLAYERS_TIE" << endl;
+    dealocateMemoryBaseBoard(data);
+}
+
+int solveGame(char** board, inputData data)
+{
+    myVector v;
+    vectorInit(v, data);
+    int BestScore = checkIfGameAlreadyOver(board, data, data.player);
+    if (data.player == '2') data.player = '1';
+ 
+
+    else if (data.player == '1') data.player = '2';
+    int lastOutput;
+    if (BestScore == NOT_SOLVED)
+    {
+        bool satNewNumber = false;
+        for (int y = 0; y < data.sizeY; y++)
+        {
+            for (int x = 0; x < data.sizeX; x++)
+            {
+                if (board[y][x] == '0')
+                {
+                    push(v, board, data);
+                    v.array[v.current - 1][y][x] = data.player;
+                    lastOutput = solveGame(v.array[v.current-1], data);
+                    if (data.player == '1' && lastOutput == P_ONE_WIN)
+                    {
+                        dealocateMemoryVector(v, data);
+                        return P_ONE_WIN;
+                    }
+
+                    else if (data.player == '2' && lastOutput == P_TWO_WIN)
+                    {
+                        dealocateMemoryVector(v, data);
+                        return P_TWO_WIN;
+                    }
+
+                    else if (data.player == '1' && (BestScore == NOT_SOLVED or BestScore == P_TWO_WIN))
+                    {
+                        if (lastOutput == NOT_SOLVED) lastOutput = DRAW;
+                        BestScore = lastOutput;
+                    }
+
+                    else if (data.player == '2' && (BestScore == NOT_SOLVED or BestScore == P_ONE_WIN))
+                    {
+                        if (lastOutput == NOT_SOLVED) lastOutput = DRAW;
+                        BestScore = lastOutput;
+                    }
+                    satNewNumber = true;
+                }
+            }
+        }
+        if (satNewNumber == false)
+        {
+            dealocateMemoryVector(v, data);
+            return DRAW;
+        }
+    }
+    dealocateMemoryVector(v, data);
+    return BestScore;
+}
+
+bool makePossibleMove(myVector& v, char** board, inputData data, int mode)
+{
+    if (checkIfGameAlreadyOver(board, data, BOTH_PLAYERS) == NOT_SOLVED)
+    {
+        for (int y = 0; y < data.sizeY; y++)
+        {
+            for (int x = 0; x < data.sizeX; x++)
+            {
+                if (board[y][x] == '0')
+                {
+                    push(v, board, data);
+                    v.array[v.current - 1][y][x] = data.player;
+                    if (mode == 2)
+                    {
+                        if (checkIfGameAlreadyOver(v.array[v.current - 1], data, BOTH_PLAYERS) != NOT_SOLVED)
+                        {
+                            printWinningBoard(v.array[v.current - 1], data);
+                            return DONT_PRINT_ALL;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return PRINT_ALL;
+}
+
+
+bool checkIfGameAlreadyOverDeeper(char** board, inputData data, char serchedChar, int x, int y)
+{
+    int counter = 1;
+    for (int i = x + 1; i < data.sizeX; i++)
+    {
+        if (board[y][i] == serchedChar) counter++;
+        else break;
+        if (counter == data.winCondition) return true;
+    }
+    counter = 1;
+    for (int i = y + 1; i < data.sizeY; i++)
+    {
+        if (board[i][x] == serchedChar) counter++;
+        else break;
+        if (counter == data.winCondition) return true;
+    }
+    counter = 1;
+    for (int i = y + 1, l = x + 1; i < data.sizeY && l < data.sizeX; i++, l++)
+    {
+        if (board[i][l] == serchedChar) counter++;
+        else break;
+        if (counter == data.winCondition) return true;
+    }
+    counter = 1;
+    for (int i = y + 1, l = x - 1; i < data.sizeY && l >= 0; i++, l--)
+    {
+        if (board[i][l] == serchedChar) counter++;
+        else break;
+        if (counter == data.winCondition) return true;
+    }
+    return false;
+}
+
+
+int checkIfGameAlreadyOver(char** board, inputData data, char player)
+{
+    for (int y = 0; y < data.sizeY; y++)
+    {
+        for (int x = 0; x < data.sizeX; x++)
+        {
+            if (board[y][x] == '1' && (player == '1' or player == BOTH_PLAYERS))
+            {
+                if (checkIfGameAlreadyOverDeeper(board, data, '1', x, y)) return P_ONE_WIN;
+            }
+            else if (board[y][x] == '2' && (player == '2' or player == BOTH_PLAYERS))
+            {
+                if (checkIfGameAlreadyOverDeeper(board, data, '2', x, y)) return P_TWO_WIN;
+            }
+        }
+    }
+    return NOT_SOLVED;
+}
+
+int main()
+{
+    char cmd[35];
+    char GEN_ALL_POS_MOV[] = { "GEN_ALL_POS_MOV" };
+    char GEN_ALL_POS_MOV_CUT_IF_GAME_OVER[] = { "GEN_ALL_POS_MOV_CUT_IF_GAME_OVER" };
+    char SOLVE_GAME_STATE[] = { "SOLVE_GAME_STATE" };
+
+    while (true)
+    {
+        scanf("%s", cmd);
+        if (feof(stdin) != 0)
+        {
+            break;
+        }
+        else if (compareText(cmd, GEN_ALL_POS_MOV, sizeof GEN_ALL_POS_MOV))
+        {
+            modeOne();
+        }
+        else if (compareText(cmd, GEN_ALL_POS_MOV_CUT_IF_GAME_OVER, sizeof GEN_ALL_POS_MOV_CUT_IF_GAME_OVER))
+        {
+            modeTwo();
+        }
+        else if (compareText(cmd, SOLVE_GAME_STATE, sizeof SOLVE_GAME_STATE))
+        {
+            modeThree();
+        }
+    }
+}
