@@ -1,13 +1,12 @@
-Tic tac toe game solver using minmax algorithm
-Input: 
--mode
--board size x y
--win condition
--active player
+Tic tac toe game solver using minmax algorithm <br>
+Input: <br>
+-mode<br>
+-board size x y<br>
+-win condition<br>
+-active player<br><br>
 
-Output mode 1/2 
-- all possible moves, mode 2 stops if move is winning move
+Output mode 1/2 <br>
+- all possible moves, mode 2 stops if move is winning move<br><br>
 
-Output mode 3
--P1 WIN/P2 WIN/TIE# NMK-Solver
-Program solving NMK games
+Output mode 3<br>
+-P1 WIN/P2 WIN/TIE# 
